@@ -1,4 +1,5 @@
 """Build once, then serve UI and API together on localhost."""
+import os
 import socket
 import subprocess
 import sys
@@ -10,24 +11,41 @@ ROOT = Path(__file__).resolve().parent
 
 
 def main():
+    port = int(os.environ.get('INFNOTE_PORT', '8765'))
+    url = f'http://127.0.0.1:{port}'
     try:
         with socket.socket() as probe:
-            probe.bind(('127.0.0.1', 8765))
+            probe.bind(('127.0.0.1', port))
     except OSError:
-        print('Port 8765 is already in use. Close the previous infNote instance first.')
+        try:
+            import json
+            import urllib.request
+            with urllib.request.urlopen(url + '/api/info', timeout=2) as response:
+                if json.load(response).get('app') == 'infNote':
+                    if not os.environ.get('INFNOTE_NO_BROWSER'):
+                        webbrowser.open(url)
+                    return 0
+        except (OSError, ValueError):
+            pass
+        print(f'Port {port} is already in use. Close the conflicting application first.')
         return 1
-    try:
-        import fastapi, uvicorn, multipart, PIL  # noqa: F401
-    except ImportError:
-        subprocess.run([sys.executable, '-m', 'pip', 'install', '-r', str(ROOT / 'requirements.txt')], check=True)
     frontend = ROOT / 'frontend'
     dist = frontend / 'dist' / 'index.html'
-    sources = list((frontend / 'src').rglob('*')) + [frontend / 'package.json', frontend / 'index.html', frontend / 'vite.config.ts']
-    if not dist.exists() or any(p.is_file() and p.stat().st_mtime > dist.stat().st_mtime for p in sources):
-        npm = 'npm.cmd' if sys.platform == 'win32' else 'npm'
-        if not (frontend / 'node_modules').exists():
-            subprocess.run([npm, 'ci'], cwd=frontend, check=True)
-        subprocess.run([npm, 'run', 'build'], cwd=frontend, check=True)
+    if getattr(sys, 'frozen', False):
+        if not dist.is_file():
+            print('Application files are missing. Extract the entire ZIP and keep the _internal folder.')
+            return 1
+    else:
+        try:
+            import fastapi, uvicorn, multipart, PIL  # noqa: F401
+        except ImportError:
+            subprocess.run([sys.executable, '-m', 'pip', 'install', '-r', str(ROOT / 'requirements.txt')], check=True)
+        sources = list((frontend / 'src').rglob('*')) + [frontend / 'package.json', frontend / 'index.html', frontend / 'vite.config.ts']
+        if not dist.exists() or any(p.is_file() and p.stat().st_mtime > dist.stat().st_mtime for p in sources):
+            npm = 'npm.cmd' if sys.platform == 'win32' else 'npm'
+            if not (frontend / 'node_modules').exists():
+                subprocess.run([npm, 'ci'], cwd=frontend, check=True)
+            subprocess.run([npm, 'run', 'build'], cwd=frontend, check=True)
     import uvicorn
     from backend.app import create_app
     app = create_app()
@@ -37,15 +55,16 @@ def main():
         import urllib.request
         for _ in range(100):
             try:
-                with urllib.request.urlopen('http://127.0.0.1:8765/api/info', timeout=1):
-                    webbrowser.open('http://127.0.0.1:8765')
+                with urllib.request.urlopen(url + '/api/info', timeout=1):
+                    webbrowser.open(url)
                     return
             except OSError:
                 time.sleep(.1)
 
-    threading.Thread(target=open_when_ready, daemon=True).start()
-    print('infNote: http://127.0.0.1:8765 — keep this window open; Ctrl+C to stop.')
-    uvicorn.run(app, host='127.0.0.1', port=8765)
+    if not os.environ.get('INFNOTE_NO_BROWSER'):
+        threading.Thread(target=open_when_ready, daemon=True).start()
+    print(f'infNote: {url} - keep this window open; Ctrl+C to stop.')
+    uvicorn.run(app, host='127.0.0.1', port=port, loop='asyncio', http='h11', ws='none')
     return 0
 
 

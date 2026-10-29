@@ -11,4 +11,5 @@
 - 禁用界面内的浏览器默认右键菜单。
 - 提供 Windows 启动脚本和面向后续 OCR / AI 扩展的内部接口。
 
-运行需要 Python 和 Node.js；此版本为源码运行版本，暂无独立安装包。
+提供 Windows x64 便携压缩包，完整解压后运行 `infNote.exe`，无需安装 Python 或 Node.js。
+源码运行仍需安装 Python 和 Node.js。便携版保留本地服务控制台窗口，界面通过浏览器打开。

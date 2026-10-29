@@ -4,6 +4,10 @@ React + TypeScript + React Flow / Python + FastAPI。本地运行，截图和文
 
 ## 启动
 
+便携版发布后，可下载 `infNote-v0.1.0-windows-x64.zip`，完整解压并双击 `infNote.exe`；无需安装 Python / Node.js。保留同目录的 `_internal` 文件夹。笔记仍保存在用户目录。
+
+以下为源码启动方式：
+
 需要 Python 3.10+、Node.js 20.19+（或 22.12+）。Windows 双击 `start.bat`，或运行 `python start.py`。
 首次启动会安装缺失的 Python 依赖、安装前端依赖并构建页面，需要联网；之后正常使用无需网络。保留启动窗口，关闭窗口会停止服务。
 
@@ -59,4 +63,4 @@ git push origin v0.1.0
 ```
 
 然后在仓库托管平台创建 Release，选择 `v0.1.0` 标签，使用更新记录作为发布说明。
-此版本发布源码，需要按本文安装运行环境；Git 标签本身不会自动创建 Release 或生成 Windows 安装包。
+生成可直接使用的 Windows 压缩包和发布的完整步骤见 [发布指南](docs/RELEASING.md)。GitHub 自动提供的 `Source code (zip)` 仅包含源码，不是便携版。

@@ -13,3 +13,5 @@ venv/
 infNoteData/
 .DS_Store
 Thumbs.db
+.venv-build/
+release/
