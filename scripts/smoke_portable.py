@@ -51,7 +51,13 @@ def main():
             process = start(log)
             try:
                 info = json.loads(request('/api/info'))
-                assert Path(info['dataDir']) == Path(directory) / 'notes'
+                # Windows runner TEMP can use an 8.3 alias (e.g. RUNNER~1),
+                # while the backend resolves it to the full directory name.
+                actual_dir = Path(info['dataDir'])
+                expected_dir = Path(directory) / 'notes'
+                assert actual_dir.samefile(expected_dir), (
+                    f'Data directory mismatch: actual={actual_dir!s}, expected={expected_dir!s}'
+                )
                 html = request('/').decode('utf-8')
                 assert 'id="root"' in html
                 for asset in re.findall(r'(?:src|href)="(/assets/[^\"]+)"', html):
