@@ -32,11 +32,11 @@ python scripts/smoke_portable.py
 3. 在该次运行的 **Artifacts** 下载 `infNote-windows-x64`。
 4. 解开下载的 artifact 压缩包，取出里面的便携版 ZIP 和 `.sha256` 文件。
 
-推送 `v*` 标签也会触发构建；标签必须与 `frontend/package.json` 的版本号一致。工作流只生成构建产物，不会自动公开发布 Release。
+手动选择分支运行时只构建；推送 `v*` 标签时会在所有测试通过后自动创建并发布 Release，附带 ZIP 和校验文件。标签必须与 `frontend/package.json` 的版本号一致。
 
-## 在 GitHub 创建 Release
+## 自动发布 Release
 
-先确保发布对应的代码已经提交并推送，然后创建标签：
+更新 `frontend/package.json` 和 `frontend/package-lock.json` 的版本号，并在 `CHANGELOG.md` 增加对应版本的说明。将代码提交并推送后，创建匹配的标签，例如当前版本：
 
 ```powershell
 git tag -a v0.1.0 -m "infNote v0.1.0"
@@ -45,11 +45,13 @@ git push origin v0.1.0
 
 如果标签已存在，请检查其对应提交，不要直接覆盖已发布标签。后续修复使用新版本号。
 
-1. 打开仓库 **Releases → Draft a new release**。
-2. 选择标签 `v0.1.0`，标题填写 `infNote v0.1.0`。
-3. 发布说明复制 `CHANGELOG.md` 中该版本的内容，并注明“Windows x64，完整解压后运行 infNote.exe，无需 Python / Node.js”。
-4. 将便携版 ZIP 和 `.sha256` 文件作为附件上传。
-5. 检查无误后点击 **Publish release**。
+之后无需手动上传：Actions 自动测试、打包、检查 EXE，成功后从 `CHANGELOG.md` 提取该版本的说明，上传 ZIP 和校验文件，并公开发布 Release。
+
+发布任务使用 GitHub 提供的 `GITHUB_TOKEN`，仅该任务具有 `contents: write`，无需另配个人令牌。带连字符的版本号（如 `0.2.0-beta.1`）会标记为预发布。
+
+附件上传完成后才公开发布；失败留下的草稿可以通过重跑恢复。已公开的同名 Release 保持不变，不覆盖既有附件。旧标签仍指向旧提交，重跑旧任务不会使用新的工作流；请发布包含新工作流的新版本标签。
+
+若希望上传本地生成的压缩包，也可在仓库 **Releases → Draft a new release** 中选择对应标签并手动添加附件。
 
 用户应下载你上传的 `infNote-v0.1.0-windows-x64.zip`，而不是 GitHub 自动提供的 `Source code` 压缩包。
 

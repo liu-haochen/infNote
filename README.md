@@ -62,5 +62,5 @@ git tag -a v0.1.0 -m "infNote v0.1.0"
 git push origin v0.1.0
 ```
 
-然后在仓库托管平台创建 Release，选择 `v0.1.0` 标签，使用更新记录作为发布说明。
+推送包含最新工作流的版本标签后，GitHub Actions 会自动测试、打包并发布 Release，附带 Windows 便携 ZIP、校验文件和该版本更新说明，无需手动上传。手动在分支上运行 Actions 只构建，不发布。
 生成可直接使用的 Windows 压缩包和发布的完整步骤见 [发布指南](docs/RELEASING.md)。GitHub 自动提供的 `Source code (zip)` 仅包含源码，不是便携版。
